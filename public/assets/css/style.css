@@ -1,0 +1,54 @@
+body {
+    background-color: #EFEFEF;
+}
+
+.content {
+    margin-top: 20px;
+}
+
+
+.nav-wizard > li > a {
+    background-color: white;
+}
+
+.nav-wizard > li:not(:last-child) > a:after {
+    border-left-color: white;
+    border-left-width: 20.7px;
+}
+
+.nav-wizard > li:not(:first-child) > a:before {
+    border-left-color: #EEE;
+}
+.nav-wizard > li:hover:not(:last-child) > a:after {
+    border-left-color:#d5d5d5;
+}
+
+.nav-wizard > li.active > a:after {
+    border-left-color: #428bca;
+    border-left-width: 20.7px;
+}
+.nav-wizard > li.active:not(:last-child) > a:after {
+    border-left-color: #428bca;
+}
+
+
+.event-list li{
+    list-style-type: none;
+    margin-bottom: 10px;
+}
+
+
+/*
+.context-nextevent {
+    color: red;
+}
+.nav-wizard > li.active.context-nextevent > a:after {
+    border-left-color: red;
+}
+.nav-wizard > li.active.context-nextevent:not(:last-child) > a:after {
+    border-left-color: red;
+}
+.nav-wizard > li.context-nextevent > a,  .nav-wizard > li.context-nextevent > a:hover{
+    background-color: red;
+}
+*/

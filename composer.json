@@ -1,0 +1,21 @@
+{
+    "name": "nextevent/php-integration-demo",
+    "description": "Showcase for integrating the NextEvent PHP SDK",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "NextEvent\\Demo\\": "src"
+        }
+    },
+    "require": {
+        "nextevent/php-sdk": "dev-master",
+        "monolog/monolog": "1.23.0"
+    },
+    "scripts": {
+        "post-update-cmd": [
+            "mkdir -p log",
+            "touch log/demo.log && chmod 0766 log/demo.log"
+        ]
+    }
+}

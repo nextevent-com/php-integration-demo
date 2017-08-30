@@ -1,0 +1,15 @@
+# ignore dev env
+/.idea
+/.docs
+
+# miscellaneous
+._.DS_Store
+.DS_Store
+composer.lock
+
+# local configuration and logs
+/config/config.php
+/log/
+
+# 3rd party files
+/vendor/
