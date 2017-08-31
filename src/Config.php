@@ -19,7 +19,7 @@ class Config
       }
 
       // use INT environment by default
-      if (!isset(self::$configuration['env'])) {
+      if (empty(self::$configuration['env'])) {
         self::$configuration['env'] = 'INT';
       }
       Env::setEnv(self::$configuration['env']);

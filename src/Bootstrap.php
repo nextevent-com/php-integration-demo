@@ -37,6 +37,7 @@ class Bootstrap
       'appUrl' => Config::get('appUrl'),
       'authUsername' => Config::get('authUsername'),
       'authPassword' => Config::get('authPassword'),
+      'env' => Config::get('env'),
       'logger' => $log
     ];
 
