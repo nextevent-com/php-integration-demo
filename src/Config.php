@@ -6,6 +6,9 @@ use NextEvent\PHPSDK\Util\Env;
 
 define('CONFIG_FILE', __DIR__ . '/../config/config.php');
 
+// make sure the server uses the correct time zone
+date_default_timezone_set('Europe/Zurich');
+
 class Config
 {
   private static $configuration = null;
