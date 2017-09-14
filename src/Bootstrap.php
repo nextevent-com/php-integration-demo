@@ -43,4 +43,23 @@ class Bootstrap
 
     return new Client($options);
   }
+
+
+  /**
+   * Initialize Logger for the Demoapp
+   *
+   * @return Logger
+   */
+  public static function getLogger()
+  {
+    $log = new Logger('demoapp');
+    if (!realpath(Config::get('logFile'))) {
+      Util::error('Log file access permission denied');
+    } else {
+      // log to file
+      $streamHandler = new StreamHandler(Config::get('logFile'), Config::get('debug') ? Logger::DEBUG : Logger::INFO);
+      $log->pushHandler($streamHandler);
+    }
+    return $log;
+  }
 }

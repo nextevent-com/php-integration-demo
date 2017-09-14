@@ -3,6 +3,7 @@ require_once '../vendor/autoload.php';
 
 use NextEvent\Demo\Util;
 use NextEvent\Demo\Bootstrap;
+use NextEvent\PHPSDK\Exception\APIResponseException;
 
 $client = Bootstrap::getClient();
 
@@ -43,7 +44,16 @@ try {
     }
     $orderItems[$key]->items++;
   }
+} catch (APIResponseException $ex) {
+  if ($ex->getCode() === 404) {
+    // this is the case, when the payment step is visited without any item in basket
+    Util::info('Keine Items im Warenkorb');
+    Util::html_footer();
+    return;
+  }
+  throw $ex;
 } catch (Exception $ex) {
+  Util::logException($ex);
   Util::error($ex->getCode().' could not authorize order: '.$ex->getMessage());
   Util::html_footer();
   return;

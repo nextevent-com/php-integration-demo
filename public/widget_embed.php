@@ -39,32 +39,53 @@ $locales = [
   'fr' => 'Französisch'
 ]
 ?>
-<div class="pull-right">
-    <form>
-        <select name="locale" class="form-control" onchange="this.parentNode.submit()">
+<div class="row">
+    <div class="col-xs-12">
+        <div class="pull-right">
+            Sprache:
+            <form>
+                <select name="locale" class="form-control" onchange="this.parentNode.submit()">
+                  <?php
+                  foreach ($locales as $key=>$value) {
+                    echo '<option value="' . $key . '"' . ($locale === $key ? ' selected' : '') . '>' . $value . '</option>';
+                  }
+                  ?>
+                </select>
+                <br>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+      <?php
+      echo $client->getWidget(Config::get('widgetHash'))->generateEmbedCode($event_id);
+      ?>
+    </div>
+    <div class="col-md-4">
+        <div id="basket">
           <?php
-          foreach ($locales as $key=>$value) {
-            echo '<option value="' . $key . '"' . ($locale === $key ? ' selected' : '') . '>' . $value . '</option>';
+          try {
+            $orderId = isset($_SESSION['nexteventOrderId']) ? $_SESSION['nexteventOrderId'] : 0;
+            if ($orderId) {
+              echo Util::renderBasket($client, $orderId);
+            } else {
+              Util::info('Warenkorb ist leer');
+            }
+          } catch (Exception $ex) {
+            Util::error($ex->getMessage());
+            Util::logException($ex);
           }
           ?>
-        </select>
-        <br>
-    </form>
-</div>
-<?php
-
-echo $client->getWidget(Config::get('widgetHash'))->generateEmbedCode($event_id);
-echo '</div>';
-
-
-// page menu
-?>
-  <div class="">
-    <div class="pull-right">
-      <a href="checkout.php" class="btn btn-primary">Zur Bezahlung</a>
+        </div>
+        <div>
+            <div class="pull-right">
+                <a href="checkout.php" class="btn btn-primary">Zur Bezahlung</a>
+            </div>
+        </div>
     </div>
-  </div>
-  <br>
+</div>
 <?php
 
 

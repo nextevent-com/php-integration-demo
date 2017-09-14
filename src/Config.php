@@ -27,9 +27,14 @@ class Config
       }
       Env::setEnv(self::$configuration['env']);
 
-      // set default DateTime fromat
+      // set default DateTime format for date and time
       if (!isset(self::$configuration['dateTimeFormat'])) {
         self::$configuration['dateTimeFormat'] = 'D, d M Y H:i';
+      }
+
+      // set default DateTime format for date only
+      if (!isset(self::$configuration['dateFormat'])) {
+        self::$configuration['dateFormat'] = 'D, d M Y';
       }
     }
   }

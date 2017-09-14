@@ -1,6 +1,8 @@
 <?php
 
 namespace NextEvent\Demo;
+use NextEvent\PHPSDK\Client;
+use NextEvent\PHPSDK\Exception\BasketEmptyException;
 
 /**
  * provide some utility functions
@@ -112,5 +114,81 @@ class Util
 
       </body>
       </html><?php
+  }
+
+
+  /**
+   * Fetch and Render the basket as html
+   *
+   * @param Client $client
+   * @param int $orderId
+   * @return string
+   */
+  static function renderBasket($client, $orderId)
+  {
+    ob_start();
+
+    $orderItems = [];
+    $totalCurrency = 'CHF';
+    try {
+
+      // fetch the final order items for listing
+      foreach ($client->getBasket($orderId)->getBasketItems() as $item) {
+        $price = $item->getPrice();
+        $key = $price->getId();
+        if (!isset($orderItems[$key])) {
+          $orderItems[$key] = (object)[
+            'event' => $item->getEventTitle(),
+            'description' => $item->getDescription(),
+            'price' => $price->getPrice(),
+            'items' => 0,
+          ];
+        }
+        $orderItems[$key]->items++;
+      }
+    } catch (BasketEmptyException $ex) {
+      Util::info('Keine Items im Warenkorb');
+    } catch (\Exception $ex) {
+      Util::error($ex->getMessage());
+      Util::logException($ex);
+    }
+
+    ?>
+      <h3>Warenkorb</h3>
+      <table class="table">
+          <thead>
+          <tr>
+              <th>Event</th>
+              <th>Ticket</th>
+              <th>Anzahl</th>
+              <th class="text-right" width="15%">Total <?= $totalCurrency ?></th>
+          </tr>
+          </thead>
+          <tbody>
+          <?php foreach ($orderItems as $orderItem): ?>
+              <tr>
+                  <td><?= $orderItem->event ?></td>
+                  <td><?= $orderItem->description ?></td>
+                  <td><?= $orderItem->items ?></td>
+                  <td class="text-right"><?= sprintf('%0.02f', $orderItem->price * $orderItem->items) ?></td>
+              </tr>
+          <?php endforeach; ?>
+          </tbody>
+      </table>
+
+    <?php
+    $html = ob_get_contents();
+    ob_end_clean();
+
+    return $html;
+  }
+
+
+  /**
+   * @param \Exception $ex
+   */
+  static function logException(\Exception $ex)
+  {
+    Bootstrap::getLogger()->error('Exception occurred: '.$ex->getMessage());
   }
 }

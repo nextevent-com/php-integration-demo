@@ -5,16 +5,23 @@ use NextEvent\Demo\Config;
 use NextEvent\Demo\Util;
 use NextEvent\Demo\Bootstrap;
 use NextEvent\PHPSDK\Exception\APIResponseException;
+use NextEvent\PHPSDK\Exception\NotAuthenticatedException;
 
 $client = Bootstrap::getClient();
 $cache = $client->getCache();
+$events = [];
+
+Util::html_header('events');
 
 // fetching all event
 try {
   $events = $client->getEvents();
 } catch (APIResponseException $ex) {
   Util::error('Events not loaded. Code: '.$ex->getCode());
-  $events = [];
+} catch (NotAuthenticatedException $ex) {
+  Util::error('Could not authenticate SDK Client: '.$ex->getMessage());
+} catch (Exception $ex) {
+  Util::logException($ex);
 }
 
 // to indexed array
@@ -26,9 +33,6 @@ foreach ($events as $event) {
 // cache events for better performance
 $cache->set('event_list', $indexed_list);
 
-
-Util::html_header('events');
-
 // show list of all events
 if (count($events)) {
   echo '<ul class="event-list">';
@@ -39,11 +43,17 @@ if (count($events)) {
         <i class="fa fa-calendar"></i> <?= htmlspecialchars($event->getTitle()) . ($event->getTitle() ? '' : 'NO NAME') ?>
       </a><br>
       <ul>
-      <?php if($event->getStartDate()) { ?>
-        <li><i class="fa fa-clock-o"></i> Start: <?= $event->getStartDate()->format(Config::get('dateTimeFormat')) ?></li>
+      <?php
+        $startDate = $event->getStartDate();
+        if($startDate) {?>
+        <li><i class="fa fa-clock-o"></i>
+        Start: <?= $startDate->format($startDate->isDateOnly() ? Config::get('dateFormat') : Config::get('dateTimeFormat')) ?></li>
       <?php } ?>
-      <?php if($event->getEndDate()) { ?>
-        <li><i class="fa fa-clock-o"></i> Ende: <?= $event->getEndDate()->format(Config::get('dateTimeFormat')) ?></li>
+      <?php
+        $endDate = $event->getEndDate();
+        if($endDate) { ?>
+        <li><i class="fa fa-clock-o"></i>
+        Ende: <?= $endDate->format($startDate->isDateOnly() ? Config::get('dateFormat') : Config::get('dateTimeFormat')) ?></li>
       <?php } ?>
       <?php if($event->getLocation()) { ?>
         <li><i class="fa fa-map-pin"></i> Ort: <?= htmlspecialchars($event->getLocation()->getTitle()) ?></li>

@@ -3,6 +3,7 @@ require_once '../vendor/autoload.php';
 
 use NextEvent\Demo\Util;
 use NextEvent\Demo\Bootstrap;
+use NextEvent\PHPSDK\Exception\BasketEmptyException;
 use NextEvent\PHPSDK\Exception\OrderItemNotFoundException;
 use NextEvent\PHPSDK\Exception\OrderNotFoundException;
 
@@ -137,6 +138,7 @@ try {
 
         <tbody>
         <?php foreach ($items as $basketItem) {
+          /** @var \NextEvent\PHPSDK\Model\BasketItem $basketItem */
           $category = $basketItem->getCategory();
           $price = $basketItem->getPrice();
           $totalPrice += $price->getPrice();
@@ -162,10 +164,13 @@ try {
     }
 
   }
-} catch (\NextEvent\PHPSDK\Exception\OrderNotFoundException $ex) {
-  Util::info('Keine Items im Warenkorb ' . $orderId);
+} catch (OrderNotFoundException $ex) {
+  Util::info('Keine Items im Warenkorb');
+} catch (BasketEmptyException $ex) {
+  Util::info('Keine Items im Warenkorb');
 } catch (Exception $ex) {
   Util::error($ex->getMessage());
+  Util::logException($ex);
 }
 
 

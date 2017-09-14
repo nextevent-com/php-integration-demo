@@ -26,7 +26,7 @@ Util::html_header('overview');
     </p>
   </div>
   <div class="container">
-    <h4>Caches löschen</h4>
+    <h4><a href="index.php?clear">Cache löschen</a></h4>
     <?php
     if(isset($_GET['clear'])) {
         $client = \NextEvent\Demo\Bootstrap::getClient();
@@ -41,7 +41,7 @@ Util::html_header('overview');
     }
     ?>
     <p>
-        Um die Demo zurück zu setzen <a href="index.php?clear">hier clicken.</a>
+        Demo zurück setzen und Cache löschen.
     </p>
   </div>
 

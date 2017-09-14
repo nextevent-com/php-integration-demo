@@ -2,6 +2,8 @@
 require_once '../vendor/autoload.php';
 
 use NextEvent\Demo\Bootstrap;
+use NextEvent\Demo\Util;
+use NextEvent\PHPSDK\Exception\APIResponseException;
 use NextEvent\PHPSDK\Util\Env;
 
 $client = Bootstrap::getClient();
@@ -23,7 +25,7 @@ if (isset($_POST['set_order_id'])) {
   response(['order_id' => $_SESSION['nexteventOrderId']]);
 }
 
-
+// tickets as json
 if (isset($_GET['tickets'])) {
   try {
     $orderId = isset($_SESSION['nexteventOrderId']) ? $_SESSION['nexteventOrderId'] : 0;
@@ -40,18 +42,18 @@ if (isset($_GET['tickets'])) {
       ]
     );
   } catch (Exception $exception) {
+    Util::logException($exception);
     response(['ready' => false, 'message' => $exception->getMessage()]);
   }
 }
 
-
+// settle payment process
 if (isset($_GET['settle_payment'])) {
   try {
     $orderId = isset($_SESSION['nexteventOrderId']) ? $_SESSION['nexteventOrderId'] : 0;
     /* @var \NextEvent\PHPSDK\Model\Payment $payment */
     $payment = unserialize($_SESSION['nexteventPaymentAuthorization']);
     if ($payment->isExpired()) {
-      \NextEvent\Demo\Util::error('Payment expired');
       throw new Exception('Payment is expired');
     }
 
@@ -95,16 +97,27 @@ if (isset($_GET['settle_payment'])) {
       header('Location: documents.php');
       exit;
     } else {
+      Util::html_header('payment');
       echo 'There went something wrong with the settlement';
+      Util::html_footer();
     }
 
+  } catch (APIResponseException $exception) {
+    Util::html_header('payment');
+    echo 'There went something wrong with the settlement<br>';
+    Util::error($exception->getMessage());
+    Util::html_footer();
   } catch (Exception $exception) {
-    echo 'There went something wrong with the settlement';
-    var_dump($exception);
+    Util::logException($exception);
+    Util::html_header('payment');
+    echo 'There went something wrong with the settlement<br>';
+    Util::error($exception->getMessage());
+    Util::html_footer();
   }
 }
 
 
+// cancel payment process
 if (isset($_GET['abort_payment'])) {
   try {
     $orderId = isset($_SESSION['nexteventOrderId']) ? $_SESSION['nexteventOrderId'] : 0;
@@ -121,13 +134,35 @@ if (isset($_GET['abort_payment'])) {
       header('Location: checkout.php');
       exit;
     } else {
+      Util::html_header('payment');
       echo 'There went something wrong with the settlement';
+      Util::html_footer();
     }
-  } catch (\NextEvent\PHPSDK\Exception\InvoiceNotFoundException $ex) {
-    header('Location: checkout.php');
-    exit;
+  } catch (APIResponseException $ex) {
+    Util::html_header('payment');
+    echo 'There went something wrong with the settlement<br>';
+    Util::error($ex->getMessage());
+    Util::html_footer();
   } catch (Exception $exception) {
-    echo 'There went something wrong with the settlement';
-    var_dump($exception);
+    Util::logException($exception);
+    Util::html_header('payment');
+    echo 'There went something wrong with the settlement<br>';
+    Util::error($exception->getMessage());
+    Util::html_footer();
+  }
+}
+
+// basket view als json
+if (isset($_GET['basket'])) {
+  try {
+    $orderId = isset($_SESSION['nexteventOrderId']) ? $_SESSION['nexteventOrderId'] : 0;
+    response([
+      'html' => Util::renderBasket($client, $orderId)
+    ]);
+  } catch (Exception $ex) {
+    Util::logException($ex);
+    response([
+      'error' => $ex->getMessage()
+    ]);
   }
 }

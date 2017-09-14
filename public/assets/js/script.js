@@ -1,3 +1,11 @@
+/**
+ * Util for posting data as JSON to backend by post message
+ *
+ * @param {string} url
+ * @param {string|object} data query parameter
+ * @param {function} success callback on success
+ * @return {*}
+ */
 function postAjax(url, data, success)
   {
   var params = typeof data == 'string' ? data : Object.keys(data).map(
@@ -22,6 +30,13 @@ function postAjax(url, data, success)
   return xhr;
   }
 
+/**
+ * Util for fetching data as JSON from backend
+ *
+ * @param {string} url
+ * @param {function} success callback on success
+ * @return {*}
+ */
 function getAjax(url, success)
   {
   var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject(
@@ -36,7 +51,7 @@ function getAjax(url, success)
   return xhr;
   }
 
-// pretty unsafe escape function
+// pretty unsafe escape function, don't use this for production
 function escapeHtml(unsafe)
   {
   return unsafe
@@ -49,37 +64,44 @@ function escapeHtml(unsafe)
 
 var NextEventWidgetAPI = window.NextEventWidgetAPI;
 
+// save order id in session
 var basket_update = function(data)
   {
-  var order_id = data.order_id;
-  var url = 'server.php';
-  var post_data = {set_order_id: order_id};
-  postAjax(url, post_data, function()
+  var orderId = data.order_id;
+  var basketChangedUrl = 'server.php';
+  var postData = {set_order_id: orderId};
+  postAjax(basketChangedUrl, postData, function()
     {
-    console.log('order added', post_data);
-    })
+    console.log('order added', postData);
+
+    // update the basket view
+    var basketUrl = 'server.php?basket';
+    getAjax(basketUrl, function (response)
+      {
+      var data = {};
+      try
+        {
+        data = JSON.parse(response);
+        }
+      catch (err)
+        {
+        data.error = JSON.stringify(err);
+        }
+      // replace basket
+      var basketElement = window.document.getElementById('basket');
+      if (data.html)
+        {
+        basketElement.innerHTML = data.html;
+        }
+      if (data.error)
+        {
+        basketElement.innerHTML += '<div class="alert alert-danger"><strong>ERROR</strong> ' + data.error + '</div>\n';
+        }
+      });
+    });
   };
 
 NextEventWidgetAPI.addMessageHandler('basket_update', basket_update);
-
-
-// var current_step = function(data)
-//   {
-//   if (data.step.indexOf('payment') >= 0 || data.step.indexOf('checkout') >= 0)
-//     {
-//     // hide widget
-//     var widgets = document.querySelectorAll('.nextevent');
-//     widgets.forEach(function(widget)
-//       {
-//       widget.style.display = 'none';
-//       });
-//     // redirect
-//     window.location.href = 'checkout.php';
-//     }
-//   };
-//
-// NextEventWidgetAPI.addMessageHandler('current_step', current_step);
-
 
 var close_widget = function(data)
 {
