@@ -36,6 +36,11 @@ class Config
       if (!isset(self::$configuration['dateFormat'])) {
         self::$configuration['dateFormat'] = 'D, d M Y';
       }
+
+      // provide configured user language as Env variable
+      if (isset($_SESSION['locale'])) {
+        Env::setVar('locale', $_SESSION['locale']);
+      }
     }
   }
 
@@ -44,19 +49,4 @@ class Config
     self::init();
     return isset(self::$configuration[$key]) ? self::$configuration[$key] : null;
   }
-}
-
-if (Config::get('debug')) {
-  // error reporting
-  ini_set('display_errors', 1);
-  ini_set('display_startup_errors', 1);
-  error_reporting(E_ALL);
-}
-
-// provide configured user language as Env variable
-if (!isset($_SESSION)) {
-  session_start();
-}
-if (isset($_SESSION['locale'])) {
-  Env::setVar('locale', $_SESSION['locale']);
 }

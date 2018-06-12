@@ -63,3 +63,16 @@ class Bootstrap
     return $log;
   }
 }
+
+// this demo app requires session support so start it in case session.auto_start=Off
+if (!session_id()) {
+  session_start();
+}
+
+// enable error reporting on the screen if debug mode is set
+if (Config::get('debug')) {
+  ini_set('display_errors', 1);
+  ini_set('display_startup_errors', 1);
+  error_reporting(E_ALL);
+}
+

@@ -6,6 +6,10 @@ body {
     margin-top: 20px;
 }
 
+.container > h1 {
+    margin-bottom: 20px;
+}
+
 
 .nav-wizard > li > a {
     background-color: white;
@@ -31,12 +35,88 @@ body {
     border-left-color: #428bca;
 }
 
-
-.event-list li{
-    list-style-type: none;
-    margin-bottom: 10px;
+.event-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 20px;
 }
 
+.event-list > li {
+    display: block;
+    list-style-type: none;
+    padding: 10px;
+    min-height: 90px;
+    background-color: #fff;
+}
+
+.event-list > li:last-child {
+    margin-right: 0;
+}
+
+.event-row {
+    display: block;
+}
+
+.event-row .event-title {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.event-row::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.event-row .event-image {
+    float: right;
+    width: 90px;
+    height: 90px;
+    overflow: hidden;
+}
+
+.event-row .event-image > img {
+    width: 100%;
+}
+
+.content-box {
+    background-color: #fff;
+}
+
+.load-msg {
+    margin-bottom: 20px;
+}
+
+.table > tbody > tr.active > td {
+    background-color: #fff;
+}
+
+.table tr.deleted > td {
+    text-decoration: line-through;
+}
+
+.table .item-addition {
+    color: #999;
+    font-size: 0.9em;
+    display: list-item;
+    margin-left: 1em;
+}
+
+.actionbuttons {
+    margin-top: 30px;
+}
+
+.table td.actions {
+    text-align: right;
+}
+
+.table .currency {
+    text-align: right;
+}
 
 /*
 .context-nextevent {
@@ -52,3 +132,19 @@ body {
     background-color: red;
 }
 */
+
+hr {
+    border-color: #333;
+}
+
+@media(max-width:960px) {
+    .event-list {
+       display: block;
+    }
+
+    .event-list > li {
+        width: 100%;
+        min-height: 50px;
+        margin-bottom: 20px;
+    }
+}

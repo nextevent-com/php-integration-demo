@@ -1,164 +1,114 @@
-/**
- * Util for posting data as JSON to backend by post message
+/*
+ * Client utility script to connect the web shop with the NextEvent Widget API
+ * 
+ * This file is part of the NextEvent integration demo site and only serves as an example.
+ * Please do not use in production.
  *
- * @param {string} url
- * @param {string|object} data query parameter
- * @param {function} success callback on success
- * @return {*}
+ * @ 2018 NextEvent AG - nextevent.com
  */
-function postAjax(url, data, success)
-  {
-  var params = typeof data == 'string' ? data : Object.keys(data).map(
-    function(k)
-    {
-    return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
-    }
-  ).join('&');
 
-  var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-  xhr.open('POST', url);
-  xhr.onreadystatechange = function()
-    {
-    if (xhr.readyState > 3 && xhr.status == 200)
-      {
-      success(xhr.responseText);
+(function(NextEventWidgetAPI) {
+  /**
+   * Handler for 'basketUpdate' messages from NextEvent Widget API
+   *
+   * Saves the submitted order/basket ID in our shop's session
+   *
+   * @param {Object} data Message data {order_id: Number}
+   */
+  function basketUpdateCallback(data) {
+    console.log('[API] basketUpdate message received', data);
+
+    var postData = {set_order_id: data.order_id};
+    $.ajax({
+      method: 'POST',
+      url: './server.php',
+      data: postData,
+    }).done(function(data) {
+      // update the basket view if response contains HTML content
+      var $basket = $('#basket');
+      if (data.html) {
+        $basket.html(data.html);
       }
-    };
-  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-  xhr.send(params);
-  return xhr;
-  }
-
-/**
- * Util for fetching data as JSON from backend
- *
- * @param {string} url
- * @param {function} success callback on success
- * @return {*}
- */
-function getAjax(url, success)
-  {
-  var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject(
-    'Microsoft.XMLHTTP');
-  xhr.open('GET', url);
-  xhr.onreadystatechange = function()
-    {
-    if (xhr.readyState > 3 && xhr.status == 200) success(xhr.responseText);
-    };
-  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-  xhr.send();
-  return xhr;
-  }
-
-// pretty unsafe escape function, don't use this for production
-function escapeHtml(unsafe)
-  {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-  }
-
-var NextEventWidgetAPI = window.NextEventWidgetAPI;
-
-// save order id in session
-var basket_update = function(data)
-  {
-  var orderId = data.order_id;
-  var basketChangedUrl = 'server.php';
-  var postData = {set_order_id: orderId};
-  postAjax(basketChangedUrl, postData, function()
-    {
-    console.log('order added', postData);
-
-    // update the basket view
-    var basketUrl = 'server.php?basket';
-    getAjax(basketUrl, function (response)
-      {
-      var data = {};
-      try
-        {
-        data = JSON.parse(response);
-        }
-      catch (err)
-        {
-        data.error = JSON.stringify(err);
-        }
-      // replace basket
-      var basketElement = window.document.getElementById('basket');
-      if (data.html)
-        {
-        basketElement.innerHTML = data.html;
-        }
-      if (data.error)
-        {
-        basketElement.innerHTML += '<div class="alert alert-danger"><strong>ERROR</strong> ' + data.error + '</div>\n';
-        }
-      });
+      if (data.error) {
+        $basket.append('<div class="alert alert-danger"><strong>ERROR</strong> ' + data.error + '</div>');
+      }
     });
-  };
+  }
 
-NextEventWidgetAPI.addMessageHandler('basket_update', basket_update);
+  NextEventWidgetAPI.addMessageHandler('basketUpdate', basketUpdateCallback);
 
-var close_widget = function(data)
-{
-  // redirect
-  window.location.href = 'checkout.php';
-};
+  /**
+   * Handler for 'closeWidget' messages from NextEvent Widget API
+   *
+   * In this demo, this will redirect the user to the checkout page
+   *
+   * @param {Object} data Message data
+   */
+  function closeWidgetCallback(data) {
+    console.log('[API] closeWidget message received', data);
 
-NextEventWidgetAPI.addMessageHandler('close_widget', close_widget);
+    window.location.href = './checkout.php';
+  }
+
+  NextEventWidgetAPI.addMessageHandler('closeWidget', closeWidgetCallback);
+
+  /**
+   * Handler for 'timeout' messages from NextEvent Widget API
+   *
+   * In this demo, this will simply reload the widget embed page.
+   *
+   * @param {Object} data Message data
+   */
+  function widgetTimeoutCallback(data) {
+    console.log('[API] timeout message received', data);
+
+    window.location.reload();
+  }
+
+  NextEventWidgetAPI.addMessageHandler('timeout', widgetTimeoutCallback);
 
 
-/**
- * create ticket list
- *
- * @param {Array} urls
- */
-function showTickets(urls)
-  {
-  var loader = document.querySelector('.load-msg');
-  loader.style.display = 'none';
+  /**
+   * create ticket list
+   *
+   * @param {Array} urls
+   */
+  function showTickets(urls) {
+    $('.load-msg').hide();
 
-  var list = document.querySelector('.ticket-list');
-  urls.forEach(function (url)
-    {
-    var div = document.createElement('div');
-    div.innerHTML = '<div class="panel panel-default"><div class="panel-body">' +
-                   '<a href="' + url + '"><i class="fa fa-ticket"></i> Ticket(s) herunterladen\n' +
-                   '</div></div>';
-    list.appendChild(div);
+    var $list = $('.ticket-list');
+    urls.forEach(function(url) {
+      $list.append(
+        '<div class="panel panel-default">' +
+          '<div class="panel-body">' +
+            '<a href="' + url + '"><i class="fa fa-ticket"></i> Download tickets</a>' +
+          '</div>' +
+        '</div>'
+      );
     });
 
-  list.style.display = 'block';
+    $list.show();
   }
 
-
-if (window.pollTickets)
-  {
-  var polling = true;
-  var pollId;
-
-  var responseHandler = function(data)
-    {
-    polling = false;
-    var response = JSON.parse(data);
-    if (response.ready)
-      {
-      clearInterval(pollId);
-      showTickets(response.urls);
+  // Start polling server for tickets to be issued.
+  // This is an asynchronous process in NextEvent and therefore the integrating
+  // application shall wait for tickets in the background.
+  if (window.pollTickets) {
+    var pollRetries = 0;
+    var responseHandler = function(data) {
+      if (data.ready) {
+        if (window.refreshView) {
+          window.location.reload();
+        } else {
+          showTickets(data.urls);
+        }
+      } else if (++pollRetries > 2) {
+        $('.load-msg').html('<div class="panel-body">' + (data.message || 'No tickets found') + '</div>');
+      } else {
+        $.ajax('./server.php?tickets').done(responseHandler);
       }
     };
 
-  getAjax('server.php?tickets', responseHandler);
-
-  pollId = setInterval(function()
-    {
-    if (polling) return;
-    polling = true;
-    getAjax('server.php?tickets', responseHandler);
-    }, 2000)
+    $.ajax('./server.php?tickets').done(responseHandler);
   }
-
+})(window.NextEventWidgetAPI);

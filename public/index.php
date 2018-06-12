@@ -1,49 +1,51 @@
 <?php
+/**
+ * Main entry point of the demo application
+ */
+
 require_once '../vendor/autoload.php';
 
 use NextEvent\Demo\Util;
+use NextEvent\Demo\Bootstrap;
 
-Util::html_header('overview');
+Util::htmlHeader('overview');
 
 ?>
 
   <div class="container">
-    <h4><a href="event_list.php">Event Auflistung</a></h4>
+    <h4><a href="events.php">Event listing</a></h4>
     <p>
-      Eine Liste der verfügbaren Events wird bei NextEvent abgefragt und dargestellt.
+      Displays a list of events available for booking.
     </p>
   </div>
   <div class="container context-nextevent">
-    <h4><a href="widget_embed.php">Widget Buchung</a></h4>
+    <h4><a href="embed.php">Booking widget</a></h4>
     <p>
-      Zum Buchen von Ticket eines Events wird das NextEvent Widget eingebunden.
+      Embeds the NextEvent widget for booking tickets for a selected event.
     </p>
   </div>
   <div class="container">
-    <h4><a href="checkout.php">Warenkorb</a></h4>
+    <h4><a href="checkout.php">Checkout</a></h4>
     <p>
-      Zur Bestätigung hat der Kunde eine übersicht der im Warenkorb erhaltenen Tickets.
+      Review and complete the NextEvent ticket order.
     </p>
   </div>
   <div class="container">
-    <h4><a href="index.php?clear">Cache löschen</a></h4>
+    <h4><a href="index.php?clear">Clear cache</a></h4>
+    <p>
+      Resets session data and server-side cache.
+    </p>
     <?php
-    if(isset($_GET['clear'])) {
-        $client = \NextEvent\Demo\Bootstrap::getClient();
-        $cache = $client->getCache();
-        $cache->clear();
-        Util::info('Cache wurde gelöscht');
-        if(!isset($_SESSION)) {
-            session_start();
-            unset($_SESSION['nexteventOrderId']);
-            unset($_SESSION['nexteventPaymentAuthorization']);
-        }
+    if (isset($_GET['clear'])) {
+      // get an instance of the NextEvent API client.
+      // this also calls session_start() if necessary
+      $client = Bootstrap::getClient();
+      $client->getCache()->clear();
+      session_destroy();
+      Util::info('Cache cleared successfully');
     }
     ?>
-    <p>
-        Demo zurück setzen und Cache löschen.
-    </p>
   </div>
 
 <?php
-Util::html_footer();
+Util::htmlFooter();

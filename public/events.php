@@ -1,4 +1,13 @@
 <?php
+/*
+ * Page rendering a listing of events fetched from the NextEvent API
+ *
+ * This file is part of the NextEvent integration demo site and only serves as an example.
+ * Please do not use in production.
+ *
+ * @ 2018 NextEvent AG - nextevent.com
+ */
+
 require_once '../vendor/autoload.php';
 
 use NextEvent\Demo\Config;
@@ -11,9 +20,10 @@ $client = Bootstrap::getClient();
 $cache = $client->getCache();
 $events = [];
 
-Util::html_header('events');
+Util::htmlHeader('events');
 
-// fetching all event
+// fetch all events
+// @see http://docs.nextevent.com/sdk/#listing-events-for-booking
 try {
   $events = $client->getEvents();
 } catch (APIResponseException $ex) {
@@ -24,14 +34,14 @@ try {
   Util::logException($ex);
 }
 
-// to indexed array
-$indexed_list = array();
+// to array event ID => event title
+$event_titles = array();
 foreach ($events as $event) {
-  $indexed_list[$event->getId()] = $event->getTitle();
+  $event_titles[$event->getId()] = $event->getTitle();
 }
 
-// cache events for better performance
-$cache->set('event_list', $indexed_list);
+// cache event titles for later access
+$cache->set('event_titles', $event_titles);
 
 // show list of all events
 if (count($events)) {
@@ -39,13 +49,16 @@ if (count($events)) {
   foreach ($events as $event) {
     ?>
     <li class="event-row">
-      <a href="widget_embed.php?event_id=<?= $event->getId()?>" target="_self">
+      <?php if ($event->hasImage()): ?>
+      <div class="event-image"><img src="<?= htmlspecialchars($event->getImage()) ?>" alt="Image"></div>
+      <?php endif; ?>
+      <a href="embed.php?event_id=<?= $event->getId()?>" target="_self" class="event-title">
         <i class="fa fa-calendar"></i> <?= htmlspecialchars($event->getTitle()) . ($event->getTitle() ? '' : 'NO NAME') ?>
-      </a><br>
-      <ul>
+      </a>
+      <ul class="event-info">
       <?php
         $startDate = $event->getStartDate();
-        if($startDate) {?>
+        if ($startDate) {?>
         <li><i class="fa fa-clock-o"></i>
         Start: <?= $startDate->format($startDate->isDateOnly() ? Config::get('dateFormat') : Config::get('dateTimeFormat')) ?></li>
       <?php } ?>
@@ -64,7 +77,7 @@ if (count($events)) {
   }
   echo '</ul>';
 } else {
-  Util::info('NO events<br>');
+  Util::info('No events found');
 }
 
-Util::html_footer();
+Util::htmlFooter();

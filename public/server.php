@@ -1,4 +1,13 @@
 <?php
+/*
+ * Backend controller executing different actions based on GET/POST parameters
+ *
+ * This file is part of the NextEvent integration demo site and only serves as an example.
+ * Please do not use in production.
+ *
+ * @ 2018 NextEvent AG - nextevent.com
+ */
+
 require_once '../vendor/autoload.php';
 
 use NextEvent\Demo\Bootstrap;
@@ -6,48 +15,46 @@ use NextEvent\Demo\Util;
 use NextEvent\PHPSDK\Exception\APIResponseException;
 use NextEvent\PHPSDK\Util\Env;
 
+// get an instance of the NextEvent API client.
+// this also calls session_start() if necessary
 $client = Bootstrap::getClient();
 
-function response($data)
-{
-  header('Content-Type: application/json');
-  echo json_encode($data);
-}
-
-if (!isset($_SESSION)) {
-  session_start();
-}
-
-// set order_id
+/*
+ * POST / - save the submitted order_id in this user's session
+ *
+ * This stores the NexEvent basket reference for later server-to-server
+ * interactions via the API.
+ *
+ * It also renders a mini basket view and returns it as a JSON response.
+ *
+ * @see http://docs.nextevent.com/sdk/#proceed-to-checkout
+ */
 if (isset($_POST['set_order_id'])) {
   $_SESSION['nexteventOrderId'] = $_POST['set_order_id'];
   unset($_SESSION['nexteventPaymentAuthorization']);
-  response(['order_id' => $_SESSION['nexteventOrderId']]);
-}
 
-// tickets as json
-if (isset($_GET['tickets'])) {
+  // respond with the rendered basket preview
+  $response = ['order_id' => $_SESSION['nexteventOrderId']];
   try {
-    $orderId = isset($_SESSION['nexteventOrderId']) ? $_SESSION['nexteventOrderId'] : 0;
-    $documents = $client->getTicketDocuments($orderId, 15);
-    $urls = array_map(function($document) { /* @var \NextEvent\PHPSDK\Model\TicketDocument $document */
-      return $document->getDownloadUrl();
-    },
-      $documents
-    );
-    response(
-      [
-        'ready' => true,
-        'urls' => $urls
-      ]
-    );
-  } catch (Exception $exception) {
-    Util::logException($exception);
-    response(['ready' => false, 'message' => $exception->getMessage()]);
+    $response['html'] = Util::renderBasket($client, $_SESSION['nexteventOrderId']);
+  } catch (Exception $ex) {
+    Util::logException($ex);
+    $response['error'] = $ex->getMessage();
   }
+  Util::jsonResponse($response);
 }
 
-// settle payment process
+
+/*
+ * GET /?settle_payment - settle the payment process of the current order
+ *
+ * Completes the payment process which was previously initiated with
+ * Client::authorizeOrder(). This action uses the payment authorization stored
+ * in session and submits a final settlemet to the NextEvent API
+ *
+ * @see http://docs.nextevent.com/sdk/#settle-payment
+ * @see http://docs.nextevent.com/sdk/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_settlePayment
+ */
 if (isset($_GET['settle_payment'])) {
   try {
     $orderId = isset($_SESSION['nexteventOrderId']) ? $_SESSION['nexteventOrderId'] : 0;
@@ -64,60 +71,73 @@ if (isset($_GET['settle_payment'])) {
       $language = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
     }
 
-//    // example customer data
-//    $customer = [
-//      'email' => 'max.muster@example.com',
-//      'name' => 'Max Muster',
-//      'company' => 'Musterfirma',
-//      'address' => [
-//        'street' => 'Musterstr. 1',
-//        'pobox' => '',
-//        'zip' => '3001',
-//        'city' => 'Bern',
-//        'country' => 'CH'
-//      ],
-//      'language' => 'de-CH'
-//    ];
+    // example customer data
+    // $customer = [
+    //   'name' => 'Mad Max',
+    //   'firstname' => 'Max',
+    //   'lastname' => 'Mad',
+    //   'company' => 'Example Inc.',
+    //   'email' => 'max.muster@example.com',
+    //   'sex' => 'm', // m:male f:female
+    //   'address' => [
+    //     'street' => 'Musterstr. 1',
+    //     'pobox' => null,
+    //     'zip' => '3001',
+    //     'city' => 'Bern',
+    //     'country' => 'CH',
+    //     'countryname' => 'Schweiz'
+    //   ],
+    //   'language' => 'de-CH'
+    // ];
 
     $customer = [
-      'name' => $_POST['name'],
+      'name' => $_POST['firstname'] . ' ' . $_POST['lastname'],
+      'firstname' => $_POST['firstname'],
+      'lastname' => $_POST['lastname'],
       'email' => $_POST['email'],
       'language' => $language,
-      'booking_ref' => md5(time()), // TODO replace by reference for booking
       'address' => []
     ];
 
-    // TODO get transaction id
+    // unique payment transaction identifier for later reference
     $transactionId = 'demo-' . time();
 
     $success = $client->settlePayment($payment, $customer, $transactionId);
 
+    // payment settlement succeeded, redirect to ticket download page
     if ($success) {
       unset($_SESSION['nexteventPaymentAuthorization']);
       header('Location: documents.php');
       exit;
     } else {
-      Util::html_header('payment');
+      Util::htmlHeader('payment');
       echo 'There went something wrong with the settlement';
-      Util::html_footer();
+      Util::htmlFooter();
     }
 
   } catch (APIResponseException $exception) {
-    Util::html_header('payment');
+    Util::htmlHeader('payment');
     echo 'There went something wrong with the settlement<br>';
     Util::error($exception->getMessage());
-    Util::html_footer();
+    Util::htmlFooter();
   } catch (Exception $exception) {
     Util::logException($exception);
-    Util::html_header('payment');
+    Util::htmlHeader('payment');
     echo 'There went something wrong with the settlement<br>';
     Util::error($exception->getMessage());
-    Util::html_footer();
+    Util::htmlFooter();
   }
 }
 
 
-// cancel payment process
+/*
+ * GET /?abort_payment - cancel the order payment process
+ *
+ * Cancels the payment process which was previously initiated with Client::authorizeOrder().
+ *
+ * @see http://docs.nextevent.com/sdk/#abort-the-payment-process
+ * @see http://docs.nextevent.com/sdk/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_abortPayment
+ */
 if (isset($_GET['abort_payment'])) {
   try {
     $orderId = isset($_SESSION['nexteventOrderId']) ? $_SESSION['nexteventOrderId'] : 0;
@@ -125,44 +145,63 @@ if (isset($_GET['abort_payment'])) {
 
     $success = $client->abortPayment(
       $payment,
-      'Kunde hat die Bezahlung abgebrochen'
+      'Customer has aborted payment'
     );
 
-    unset($_SESSION['nexteventPaymentAuthorization']);
     if ($success) {
-      sleep(2);  // wait for basket to be restored before redirecting
+      unset($_SESSION['nexteventPaymentAuthorization']);
       header('Location: checkout.php');
+      sleep(2);  // wait for basket to be restored before redirecting
       exit;
     } else {
-      Util::html_header('payment');
+      Util::htmlHeader('payment');
       echo 'There went something wrong with the settlement';
-      Util::html_footer();
+      Util::htmlFooter();
     }
   } catch (APIResponseException $ex) {
-    Util::html_header('payment');
+    Util::htmlHeader('payment');
     echo 'There went something wrong with the settlement<br>';
     Util::error($ex->getMessage());
-    Util::html_footer();
+    Util::htmlFooter();
   } catch (Exception $exception) {
     Util::logException($exception);
-    Util::html_header('payment');
+    Util::htmlHeader('payment');
     echo 'There went something wrong with the settlement<br>';
     Util::error($exception->getMessage());
-    Util::html_footer();
+    Util::htmlFooter();
   }
 }
 
-// basket view als json
-if (isset($_GET['basket'])) {
+
+/*
+ * GET /?tickets - Get ticket documents for the current order
+ *
+ * Fetches the ticket documents for the order stored in session and return them
+ * as download urls to the client. The action has set a wait time of 5 seconds
+ *
+ * @see http://docs.nextevent.com/sdk/#retrieve-tickets
+ * @see http://docs.nextevent.com/sdk/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_getTicketDocuments
+ */
+if (isset($_GET['tickets'])) {
   try {
     $orderId = isset($_SESSION['nexteventOrderId']) ? $_SESSION['nexteventOrderId'] : 0;
-    response([
-      'html' => Util::renderBasket($client, $orderId)
+    $documents = $client->getTicketDocuments($orderId, 5);
+    $urls = array_map(
+      function($document) {
+        /* @var \NextEvent\PHPSDK\Model\TicketDocument $document */
+        return $document->getDownloadUrl();
+      },
+      $documents
+    );
+    Util::jsonResponse([
+      'ready' => true,
+      'urls' => $urls
     ]);
-  } catch (Exception $ex) {
-    Util::logException($ex);
-    response([
-      'error' => $ex->getMessage()
+  } catch (Exception $exception) {
+    Util::logException($exception);
+    Util::jsonResponse([
+      'ready' => false,
+      'message' => $exception->getMessage()
     ]);
   }
 }

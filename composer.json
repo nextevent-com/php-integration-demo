@@ -15,7 +15,8 @@
     "scripts": {
         "post-update-cmd": [
             "mkdir -p log",
-            "touch log/demo.log && chmod 0766 log/demo.log"
+            "touch log/demo.log && chmod 0766 log/demo.log",
+            "cp vendor/nextevent/php-sdk/assets/js/widgetapi.js public/assets/js/widgetapi.js"
         ]
     }
 }

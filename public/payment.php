@@ -1,4 +1,13 @@
 <?php
+/*
+ * Page controller demonstrating the payment process of a NextEvent order
+ *
+ * This file is part of the NextEvent integration demo site and only serves as an example.
+ * Please do not use in production.
+ *
+ * @ 2018 NextEvent AG - nextevent.com
+ */
+
 require_once '../vendor/autoload.php';
 
 use NextEvent\Demo\Util;
@@ -7,12 +16,7 @@ use NextEvent\PHPSDK\Exception\APIResponseException;
 
 $client = Bootstrap::getClient();
 
-
-Util::html_header('payment');
-
-if (!isset($_SESSION)) {
-  session_start();
-}
+Util::htmlHeader('payment');
 
 $orderId = isset($_SESSION['nexteventOrderId']) ? $_SESSION['nexteventOrderId'] : 0;
 $totalPrice = '--.--';
@@ -31,9 +35,12 @@ try {
   $_SESSION['nexteventPaymentAuthorization'] = serialize($payment);
 
   // fetch the final order items for listing
-  foreach ($client->getOrder($orderId)->getOrderItems() as $item) {
+  $order = $client->getOrder($orderId);
+  foreach ($order->getOrderItems() as $item) {
     $price = $item->getPrice();
     $key = $price->getId();
+
+    // group items by price ID
     if (!isset($orderItems[$key])) {
       $orderItems[$key] = (object)[
         'event' => $item->getEventTitle(),
@@ -44,75 +51,81 @@ try {
     }
     $orderItems[$key]->items++;
   }
+
+  // read stored customer data
+  $customer = $order->getPayment()['customer'] + ['firstname' => '', 'lastname' => '', 'email' => ''];
 } catch (APIResponseException $ex) {
   if ($ex->getCode() === 404) {
     // this is the case, when the payment step is visited without any item in basket
-    Util::info('Keine Items im Warenkorb');
-    Util::html_footer();
-    return;
+    Util::info('Your basket is empty');
+  } else {
+    Util::logException($ex);
+    Util::error($ex->getCode().' could not authorize order: '.$ex->getMessage());
   }
-  throw $ex;
+  return Util::htmlFooter();  // terminate script
 } catch (Exception $ex) {
   Util::logException($ex);
   Util::error($ex->getCode().' could not authorize order: '.$ex->getMessage());
-  Util::html_footer();
-  return;
+  return Util::htmlFooter();  // terminate script
 }
-
 
 ?>
 
-  <h3>Ihre Rechnung</h3>
+  <h3>Your order</h3>
 
   <table class="table">
   <thead>
     <tr>
       <th>Event</th>
       <th>Ticket</th>
-      <th>Anzahl</th>
+      <th>Items</th>
       <th class="text-right" width="15%">Total <?= $totalCurrency ?></th>
     </tr>
   </thead>
   <tbody>
 <?php foreach ($orderItems as $orderItem): ?>
     <tr>
-      <td><?= $orderItem->event ?></td>
-      <td><?= $orderItem->description ?></td>
-      <td><?= $orderItem->items ?></td>
+      <td><?= htmlspecialchars($orderItem->event) ?></td>
+      <td><?= htmlspecialchars($orderItem->description) ?></td>
+      <td><?= htmlspecialchars($orderItem->items) ?></td>
       <td class="text-right"><?= sprintf('%0.02f', $orderItem->price * $orderItem->items) ?></td>
     </tr>
 <?php endforeach; ?>
   </tbody>
   </table>
 
-  <div class="well" style="display:block;">Total <?= sprintf('%s %0.02f', $totalCurrency, $totalPrice) ?></div>
+  <div class="well">
+    Total <?= sprintf('%s %0.02f', $totalCurrency, $totalPrice) ?>
+  </div>
 
-
+  <!-- submit form to server.php for processing -->
   <form action="server.php?settle_payment" method="post" class="form-horizontal">
     <div class="form-group">
-      <label for="customerName" class="col-sm-2 control-label">Name</label>
+      <label for="customerFirstName" class="col-sm-2 control-label">First name</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" id="customerName" name="name">
+        <input type="text" class="form-control" id="customerFirstName" name="firstname" value="<?= htmlentities($customer['firstname']) ?>">
       </div>
     </div>
     <div class="form-group">
-      <label for="customerName" class="col-sm-2 control-label">Email</label>
+      <label for="customerLastName" class="col-sm-2 control-label">Last name</label>
       <div class="col-sm-10">
-        <input type="email" class="form-control" id="customerEmail"
-               name="email">
+        <input type="text" class="form-control" id="customerLastName" name="lastname" value="<?= htmlentities($customer['lastname']) ?>">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="customerEmail" class="col-sm-2 control-label">E-mail address</label>
+      <div class="col-sm-10">
+        <input type="email" class="form-control" id="customerEmail" name="email" value="<?= htmlentities($customer['email']) ?>">
       </div>
     </div>
     <div class="form-group">
       <div class="col-sm-12 text-center">
-        <a href="server.php?abort_payment" class="btn btn-danger">Abbrechen</a>
-        <button type="submit" class="btn btn-primary">Zahlung bestätigen</button>
+        <a href="server.php?abort_payment" class="btn btn-danger">Cancel</a>
+        <button type="submit" class="btn btn-primary">Confirm payment</button>
       </div>
     </div>
   </form>
 
-
-
-
 <?php
 
-Util::html_footer();
+Util::htmlFooter();
