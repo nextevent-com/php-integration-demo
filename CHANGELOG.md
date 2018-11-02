@@ -2,6 +2,12 @@
 
 All notable changes to the SDK will be documented in this file.
 
+## 1.3.0
+
+* Implemented new features of SDK 1.3.0
+  * Update basket expiration time
+  
+
 ## 1.2.0
 
 * Implemented new features of SDK 1.2.0

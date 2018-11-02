@@ -7,7 +7,7 @@ primarily serves as a showcase.
 
 # Requirements
 
-This project requires PHP 5.4 or higher with session support and [Composer](https://getcomposer.org)
+This project requires PHP 5.5 or higher with session support and [Composer](https://getcomposer.org)
 to install the dependencies.
 
 # Installation
@@ -24,6 +24,15 @@ Then install the required modules with Composer:
 cd /path/to/nextevent_demo
 composer install --no-dev
 ```
+
+# Update
+
+To update the demo to the newest version just run:
+
+```
+composer update
+```
+
 
 # Configuration
 
@@ -50,6 +59,6 @@ Now point your browser at `http://<your-host-name>:8000` and book your first tic
 
 # License
 
-Copyright (C) 2017, NextEvent GmbH, nextevent.com
+Copyright (C) 2018, NextEvent AG, nextevent.com
 
 Published under the [MIT License](https://opensource.org/licenses/MIT), all rights reserved.

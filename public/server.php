@@ -67,8 +67,8 @@ if (isset($_GET['settle_payment'])) {
     $language = '';
     if (Env::getVar('locale')) {
       $language = Env::getVar('locale');
-    } else if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-      $language = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+    } else if (!empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+      $language = reset(explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']));
     }
 
     // example customer data

@@ -22,12 +22,14 @@ $orderId = isset($_SESSION['nexteventOrderId']) ? $_SESSION['nexteventOrderId'] 
 $totalPrice = '--.--';
 $totalCurrency = 'CHF';
 $orderItems = [];
+$orderExpires = null;
 
 try {
   if (isset($_SESSION['nexteventPaymentAuthorization'])) {
     $payment = unserialize($_SESSION['nexteventPaymentAuthorization']);
   } else {
-    $payment = $client->authorizeOrder($orderId);
+    // get payment authorization. set the expiration time to 15 minutes
+    $payment = $client->authorizeOrder($orderId, ['ttl' => 15]);
   }
 
   $totalPrice = $payment->getAmount();
@@ -36,6 +38,8 @@ try {
 
   // fetch the final order items for listing
   $order = $client->getOrder($orderId);
+  $orderExpires = date_diff(new DateTime(), $order->getExpires())->i;
+
   foreach ($order->getOrderItems() as $item) {
     $price = $item->getPrice();
     $key = $price->getId();
@@ -95,7 +99,16 @@ try {
   </table>
 
   <div class="well">
-    Total <?= sprintf('%s %0.02f', $totalCurrency, $totalPrice) ?>
+    <strong>Total <?= sprintf('%s %0.02f', $totalCurrency, $totalPrice) ?></strong>
+    <p class="pull-right">
+    <?php
+      if ($orderExpires > 0) {
+        printf('Expires in %d minutes', $orderExpires);
+      } else {
+        print('Is expired!');
+      }
+    ?>
+    </p>
   </div>
 
   <!-- submit form to server.php for processing -->

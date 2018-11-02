@@ -97,6 +97,20 @@ if (isset($_GET['delete_order'])) {
   unset($_SESSION['nexteventOrderId']);
 }
 
+/**
+ * Extend basket expiration to N minutes from now
+ *
+ * @see http://docs.nextevent.com/sdk/#extend-basket-expiration
+ * @see http://docs.nextevent.com/sdk/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_updateBasketExpiration
+ */
+if (!empty($_GET['extend']) && $orderId) {
+  $client->updateBasketExpiration($orderId, intval($_GET['extend']));
+
+  // redirect back to payment page
+  header('Location: checkout.php');
+  return;
+}
+
 // cancel payment authorization if order is already in payment process
 if (isset($_SESSION['nexteventPaymentAuthorization'])) {
   try {
@@ -133,7 +147,6 @@ Util::debug('Current order id ' . $orderId);
 
 try {
   $basket = $client->getBasket($orderId);
-  $basketItems = $basket->getBasketItems();
   $basketExpires = date_diff(new DateTime(), $basket->getExpires())->i;
 
   // if this is a rebooking order, store it in session for referencing it in embed.php
@@ -142,6 +155,8 @@ try {
   } else {
     unset($_SESSION['nexteventRebookingOrder']);
   }
+
+  $basketItems = $basket->getBasketItems();
 
   if (count($basketItems)) {
     // group basket items by event_id
@@ -229,14 +244,20 @@ if ($basket && $basket->isRebookOrder()) {
   printf('<div class="well"><strong>Total %s %0.02f</strong>', $totalCurrency, $totalPrice);
 }
 
+print '<p class="pull-right">';
+
 // display basket expiration time
 if ($basketExpires > 0) {
-  printf('<p class="pull-right">Expires in %d minutes</p>', $basketExpires);
+  printf('Expires in %d minutes', $basketExpires);
 } else if ($basketExpires !== null) {
-  printf('<p class="pull-right">Is expired!</p>', $basketExpires);
+  print('Is expired!');
 }
 
-echo '</div>';
+if ($basketExpires !== null && $basketExpires < 20) {
+  print('&nbsp; <a href="./checkout.php?extend=20" class="btn btn-default btn-xs" title="Increase to 20 minutes"><i class="fa fa-plus"></i></a>');
+}
+
+echo '</p></div>';
 
 // checkout menu
 ?>

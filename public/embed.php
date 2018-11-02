@@ -27,7 +27,9 @@ echo '<div class="context-nextevent">';
 
 // fallback if no event ID is provided
 if (!$event_id) {
-  Util::debug('No event_id! use ?event_id=00000');
+  Util::warn('No event_id provided! Use <code>?event_id=&lt;id&gt;</code> or <a href="events.php">select an event from the listing</a>');
+  echo '</div>';
+  return Util::htmlFooter();
 }
 
 // if this is a rebooking order, set $changeorder variable
