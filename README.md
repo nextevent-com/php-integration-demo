@@ -59,6 +59,6 @@ Now point your browser at `http://<your-host-name>:8000` and book your first tic
 
 # License
 
-Copyright (C) 2018, NextEvent AG, nextevent.com
+Copyright (C) 2020, NextEvent AG, [nextevent.com](https://nextevent.com)
 
 Published under the [MIT License](https://opensource.org/licenses/MIT), all rights reserved.
