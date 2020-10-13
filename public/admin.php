@@ -136,9 +136,9 @@ if ($order && $order->getState() !== 'basket') {
         $category = $orderItem->getCategory();
         $price = $orderItem->getPrice();
         $itemAdditions = [];
-        // add seat information
-        if ($orderItem->hasSeat()) {
-          $itemAdditions[] = '<div class="item-addition seat">' . $orderItem->getSeat()->getDisplayname() . '</div>';
+        // add additional information
+        if ($orderItem->hasInfo()) {
+          $itemAdditions[] = '<div class="item-addition info">' . $orderItem->getInfo() . '</div>';
         }
         // list all child items if available
         foreach ($orderItem->getChildren() as $child) {
@@ -173,6 +173,18 @@ if ($order && $order->getState() !== 'basket') {
         // print the state of the ticket, too (e.g. revoked)
         printf('<li>T%s (%s)</li>', $ticket->getCode(), $ticket->getState());
       }
+    }
+  ?>
+  </ul>
+  <?php endif; ?>
+
+  <?php if (count($order->getDocuments()) > 0): ?>
+  <!-- list all downloadable documents -->
+  <h4>Documents</h4>
+  <ul>
+  <?php
+    foreach ($order->getDocuments() as $doc) {
+      printf('<li><a href="%s">%s (%s)</a></li>', $doc->getDownloadUrl(), $doc->getTitle(), strtoupper($doc->get('filetype')));
     }
   ?>
   </ul>

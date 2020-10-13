@@ -71,17 +71,17 @@
   /**
    * create ticket list
    *
-   * @param {Array} urls
+   * @param {Array} results
    */
-  function showTickets(urls) {
+  function showDocuments(results) {
     $('.load-msg').hide();
 
     var $list = $('.ticket-list');
-    urls.forEach(function(url) {
+    results.forEach(function(doc) {
       $list.append(
         '<div class="panel panel-default">' +
           '<div class="panel-body">' +
-            '<a href="' + url + '"><i class="fa fa-ticket"></i> Download tickets</a>' +
+            '<a href="' + doc.uri + '"><i class="fa fa-ticket"></i> ' + (doc.title || 'Download tickets') + '</a>' +
           '</div>' +
         '</div>'
       );
@@ -100,7 +100,7 @@
         if (window.refreshView) {
           window.location.reload();
         } else {
-          showTickets(data.urls);
+          showDocuments(data.results);
         }
       } else if (++pollRetries > 2) {
         $('.load-msg').html('<div class="panel-body">' + (data.message || 'No tickets found') + '</div>');

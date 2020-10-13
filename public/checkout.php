@@ -57,8 +57,8 @@ $delete_order_item_id = isset($_GET['delete_order_item_id']) ? (int)$_GET['delet
 /*
  * Delete a given order item from the basket
  * 
- * @see http://docs.nextevent.com/sdk/#remove-items-from-basket
- * @see http://docs.nextevent.com/sdk/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_deleteBasketItem
+ * @see https://developer.nextevent.com/#remove-items-from-basket
+ * @see https://developer.nextevent.com/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_deleteBasketItem
  */
 if ($orderId && $delete_order_item_id) {
   try {
@@ -77,8 +77,8 @@ if ($orderId && $delete_order_item_id) {
 /*
  * Clear the entire basket
  *
- * @see http://docs.nextevent.com/sdk/#delete-the-entire-basket
- * @see http://docs.nextevent.com/sdk/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_deleteBasket
+ * @see https://developer.nextevent.com/#delete-the-entire-basket
+ * @see https://developer.nextevent.com/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_deleteBasket
  */
 if (isset($_GET['delete_order'])) {
   try {
@@ -100,8 +100,8 @@ if (isset($_GET['delete_order'])) {
 /**
  * Extend basket expiration to N minutes from now
  *
- * @see http://docs.nextevent.com/sdk/#extend-basket-expiration
- * @see http://docs.nextevent.com/sdk/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_updateBasketExpiration
+ * @see https://developer.nextevent.com/#extend-basket-expiration
+ * @see https://developer.nextevent.com/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_updateBasketExpiration
  */
 if (!empty($_GET['extend']) && $orderId) {
   $client->updateBasketExpiration($orderId, intval($_GET['extend']));
@@ -198,18 +198,23 @@ try {
           $description = $basketItem->getDescription();
           $priceFormatted = sprintf('%s %0.02f', $price->getCurrency(), $price->getPrice());
           $itemAdditions = [];
+          $editSteps = [];
           // append ticket code to listing (in rebooking case)
           if ($basketItem->hasTicketCode()) {
             $itemAdditions[] = ' <em class="ticket-code">(T' . $basketItem->getTicketCode() . ')</em>';
           }
-          // add seat information
-          if ($basketItem->hasSeat()) {
-            $itemAdditions[] = '<div class="item-addition seat">' . $basketItem->getSeat()->getDisplayname() . '</div>';
+          // add additional information
+          if ($basketItem->hasInfo()) {
+            $itemAdditions[] = '<div class="item-addition info">' . $basketItem->getInfo() . '</div>';
           }
           // list all child items if available
           foreach ($basketItem->getChildren() as $child) {
             $additionPrice = $child->getPrice()->getPrice() ? sprintf(' (%0.2f)', $child->getPrice()->getPrice()) : '';
             $itemAdditions[] = '<div class="item-addition">' . $child->getDescription() . $additionPrice . '</div>';
+          }
+          // add links for listed edit steps (via embed widget)
+          foreach ($basketItem->getEditSteps() as $editStep) {
+            $editSteps[] = sprintf('<a href="./embed.php?url=%s">%s</a>', urlencode($editStep['url']), htmlentities($editStep['label']));
           }
         ?>
           <tr class="<?= $basketItem->isDeleted() ? 'deleted' : '' ?>">
@@ -217,7 +222,8 @@ try {
             <td><?= htmlspecialchars($description) . join('', $itemAdditions) ?></td>
             <td class="currency"><?= $priceFormatted ?></td>
             <td class="actions">
-              <a href="checkout.php?delete_order_item_id=<?= $basketItem->getId() ?>">Remove</a>
+              <a href="checkout.php?delete_order_item_id=<?= $basketItem->getId() ?>">Remove</a><br>
+              <?php echo join('<br>', $editSteps); ?>
             </td>
           </tr>
         <?php } ?>

@@ -2,6 +2,13 @@
 
 All notable changes to the SDK will be documented in this file.
 
+## 1.4.0
+
+* Implemened new features of SDK 1.4.0
+  * Add links to edit steps (via widget embed)
+  * Display BasketItem's `info` property in checkout view
+  * Avoid usage of deprecated `BasketItem::hasSeat()` and `BasketItem::getSeat()` methods
+
 ## 1.3.0
 
 * Implemented new features of SDK 1.3.0

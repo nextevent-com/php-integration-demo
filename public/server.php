@@ -27,7 +27,7 @@ $client = Bootstrap::getClient();
  *
  * It also renders a mini basket view and returns it as a JSON response.
  *
- * @see http://docs.nextevent.com/sdk/#proceed-to-checkout
+ * @see https://developer.nextevent.com/#proceed-to-checkout
  */
 if (isset($_POST['set_order_id'])) {
   $_SESSION['nexteventOrderId'] = $_POST['set_order_id'];
@@ -52,8 +52,8 @@ if (isset($_POST['set_order_id'])) {
  * Client::authorizeOrder(). This action uses the payment authorization stored
  * in session and submits a final settlemet to the NextEvent API
  *
- * @see http://docs.nextevent.com/sdk/#settle-payment
- * @see http://docs.nextevent.com/sdk/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_settlePayment
+ * @see https://developer.nextevent.com/#settle-payment
+ * @see https://developer.nextevent.com/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_settlePayment
  */
 if (isset($_GET['settle_payment'])) {
   try {
@@ -135,8 +135,8 @@ if (isset($_GET['settle_payment'])) {
  *
  * Cancels the payment process which was previously initiated with Client::authorizeOrder().
  *
- * @see http://docs.nextevent.com/sdk/#abort-the-payment-process
- * @see http://docs.nextevent.com/sdk/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_abortPayment
+ * @see https://developer.nextevent.com/#abort-the-payment-process
+ * @see https://developer.nextevent.com/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_abortPayment
  */
 if (isset($_GET['abort_payment'])) {
   try {
@@ -179,23 +179,23 @@ if (isset($_GET['abort_payment'])) {
  * Fetches the ticket documents for the order stored in session and return them
  * as download urls to the client. The action has set a wait time of 5 seconds
  *
- * @see http://docs.nextevent.com/sdk/#retrieve-tickets
- * @see http://docs.nextevent.com/sdk/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_getTicketDocuments
+ * @see https://developer.nextevent.com/#retrieve-tickets
+ * @see https://developer.nextevent.com/phpdoc/classes/NextEvent.PHPSDK.Client.html#method_getOrderDocuments
  */
 if (isset($_GET['tickets'])) {
   try {
     $orderId = isset($_SESSION['nexteventOrderId']) ? $_SESSION['nexteventOrderId'] : 0;
-    $documents = $client->getTicketDocuments($orderId, 5);
-    $urls = array_map(
+    $documents = $client->getOrderDocuments($orderId, 5);
+    $results = array_map(
       function($document) {
-        /* @var \NextEvent\PHPSDK\Model\TicketDocument $document */
-        return $document->getDownloadUrl();
+        /* @var \NextEvent\PHPSDK\Model\OrderDocument $document */
+        return $document->toArray();
       },
       $documents
     );
     Util::jsonResponse([
       'ready' => true,
-      'urls' => $urls
+      'results' => $results
     ]);
   } catch (Exception $exception) {
     Util::logException($exception);

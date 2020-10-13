@@ -22,11 +22,12 @@ $client = Bootstrap::getClient();
 Util::htmlHeader('booking');
 
 $event_id = isset($_GET['event_id']) ? (int)$_GET['event_id'] : 0;
+$embed_link = isset($_GET['url']) ? $_GET['url'] : null;
 
 echo '<div class="context-nextevent">';
 
 // fallback if no event ID is provided
-if (!$event_id) {
+if (!$event_id && !$embed_link) {
   Util::warn('No event_id provided! Use <code>?event_id=&lt;id&gt;</code> or <a href="events.php">select an event from the listing</a>');
   echo '</div>';
   return Util::htmlFooter();
@@ -93,9 +94,12 @@ $locales = [
       <?php
         /*
          * Embed the booking widget with the hash stored in config and the submitted event ID
-         * @see http://docs.nextevent.com/sdk/#embed-the-booking-widget
+         * @see https://developer.nextevent.com/#embed-the-booking-widget
          */
-        $embedOptions = ['eventId' => $event_id];
+        if ($embed_link)
+          $embedOptions = ['link' => $embed_link];
+        else
+          $embedOptions = ['eventId' => $event_id];
 
         // if this is a rebooking order, pass a reference to the widget
         if ($changeorder) {

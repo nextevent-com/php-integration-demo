@@ -23,7 +23,7 @@ $events = [];
 Util::htmlHeader('events');
 
 // fetch all events
-// @see http://docs.nextevent.com/sdk/#listing-events-for-booking
+// @see https://developer.nextevent.com/#listing-events-for-booking
 try {
   $events = $client->getEvents();
 } catch (APIResponseException $ex) {

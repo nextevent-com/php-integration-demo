@@ -10,7 +10,8 @@
     },
     "require": {
         "nextevent/php-sdk": "dev-master",
-        "monolog/monolog": "1.23.0"
+        "monolog/monolog": "1.23.0",
+        "guzzlehttp/guzzle": "~6.3.3"
     },
     "scripts": {
         "post-update-cmd": [
